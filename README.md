@@ -127,8 +127,8 @@ $$
 
 $$
 \mathcal{L}_{\text{student}} \;=\; \alpha\,\mathcal{L}_{\text{CE}} \;+\; (1-\alpha)\,\mathcal{L}_{\text{KD}}
-\qquad \text{with } \alpha=0.5,\; T=3.0
 $$
+
 
 * **Optimizer:** Adam (lr = 1e-3)
 * **Notes:** Teacher outputs are coerced to probabilities (softmax applied if needed). KD uses the standard \$T^2\$ scaling.
