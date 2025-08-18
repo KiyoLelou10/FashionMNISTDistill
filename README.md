@@ -71,5 +71,5 @@ Copy `model_data.cc` into your RIOT project and link against TensorFlow Lite Mic
 ## ⚡ Notes
 
 * Teacher: \~89% accuracy on FMNIST (48×48)
-* Student: \~81% accuracy (INT8, distilled)
+* Student: \~85% accuracy (INT8, distilled)
 * For people-counting, pipeline is theoretically the same, but dataset size may require tweaks.
