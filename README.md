@@ -80,77 +80,74 @@ Copy `model_data.cc` into your RIOT project and link against TensorFlow Lite Mic
 
 **Objective:** smoothed cross-entropy on 10-class Fashion-MNIST.
 
-* **Loss:** *label-smoothed* categorical cross-entropy implemented via one-hot:
+* **Loss:** label-smoothed categorical cross-entropy (via one-hot).
 
   $$
-  \tilde{\mathbf{y}} \;=\; (1-\varepsilon)\,\mathrm{onehot}(y) \;+\; \frac{\varepsilon}{K}\mathbf{1},\qquad \varepsilon = 0.05,\; K=10
+  \tilde{\mathbf{y}} \;=\; (1-\varepsilon)\,\mathrm{onehot}(y) \;+\; \frac{\varepsilon}{K}\,\mathbf{1}
+  \quad\text{with}\quad \varepsilon=0.05,\; K=10
   $$
 
   $$
-  \mathcal{L}_\text{teacher} \;=\; \mathrm{CE}\big(\tilde{\mathbf{y}}, \; \mathbf{p}_\theta\big)
+  \mathcal{L}_{\text{teacher}} \;=\; \mathrm{CE}\!\big(\tilde{\mathbf{y}},\; \mathbf{p}_\theta\big)
   $$
 
-  where $\mathbf{p}_\theta$ are model softmax outputs.
+  where \$\mathbf{p}\_\theta\$ are the model softmax outputs.
 
-* **In code:** `smooth_sparse_cce(num_classes=10, label_smoothing=0.05)` (then uses `keras.losses.categorical_crossentropy`).
+* **In code:** `smooth_sparse_cce(num_classes=10, label_smoothing=0.05)` → `keras.losses.categorical_crossentropy`.
 
-* **Optimizer:** Adam (lr = **1e-3**).
+* **Optimizer:** Adam (lr = 1e-3).
 
-* **Regularization:** L2 weight decay on conv/dense kernels (`keras.regularizers.l2(1e-4)`).
+* **Regularization:** L2 (1e-4) on conv/dense kernels.
 
-* **Augmentations:** light jitter (pad+random crop, brightness/contrast).
+* **Augmentations:** pad+random crop, light brightness/contrast jitter.
 
 ---
 
 ### Student distillation (`distill_fmnist_48_manual_v2.py`)
 
-**Objective:** combine hard-label CE with a KL distillation term from the fixed teacher.
+**Objective:** combine hard-label CE with a temperature-scaled KD term from the frozen teacher.
 
-* **Hard-label term:** sparse CE on student **logits** $\mathbf{z}_s$:
-
-  $$
-  \mathcal{L}_\text{CE} \;=\; \mathrm{CE}_\text{sparse}\big(y, \mathbf{z}_s\big)
-  $$
-
-  *(implemented with `SparseCategoricalCrossentropy(from_logits=True)`).*
-
-* **KD term:** temperature-scaled KL from teacher probs $\mathbf{p}_t$ to student:
+* **Hard-label term (student logits \$\mathbf{z}\_s\$):**
 
   $$
-  \mathbf{p}_t^{(T)} \;=\; \mathrm{norm}\!\left(\mathbf{p}_t^{\,1/T}\right), \qquad
-  \mathbf{p}_s^{(T)} \;=\; \mathrm{softmax}\!\left(\frac{\mathbf{z}_s}{T}\right)
+  \mathcal{L}_{\text{CE}} \;=\; \mathrm{CE}_{\text{sparse}}\!\big(y,\; \mathbf{z}_s\big)
+  $$
+
+  (implemented with `SparseCategoricalCrossentropy(from_logits=True)`).
+
+* **KD term (teacher probs \$\mathbf{p}\_t\$):**
+
+  $$
+  \mathbf{p}_t^{(T)} \;=\; \mathrm{norm}\!\big(\mathbf{p}_t^{\,1/T}\big),
+  \qquad
+  \mathbf{p}_s^{(T)} \;=\; \mathrm{softmax}\!\big(\mathbf{z}_s/T\big)
   $$
 
   $$
-  \mathcal{L}_\text{KD} \;=\; T^2 \cdot \mathrm{KL}\!\left(\mathbf{p}_t^{(T)} \;\|\; \mathbf{p}_s^{(T)}\right)
+  \mathcal{L}_{\text{KD}} \;=\; T^2 \cdot \mathrm{KL}\!\left(\mathbf{p}_t^{(T)} \;\middle\|\; \mathbf{p}_s^{(T)}\right)
   $$
-
-  *(implemented in `kd_term(...)`).*
 
 * **Total loss:**
 
   $$
-  \mathcal{L}_\text{student} \;=\; \alpha \,\mathcal{L}_\text{CE} \;+\; (1-\alpha)\,\mathcal{L}_\text{KD}
+  \mathcal{L}_{\text{student}} \;=\; \alpha\,\mathcal{L}_{\text{CE}} \;+\; (1-\alpha)\,\mathcal{L}_{\text{KD}}
+  \quad\text{with}\quad \alpha=0.5,\; T=3.0
   $$
 
-  with **$\alpha = 0.5$** and **$T = 3.0$** by default.
+* **Optimizer:** Adam (lr = 1e-3).
 
-* **Optimizer:** Adam (lr = **1e-3**).
-
-* **Notes:**
-
-  * Teacher outputs are coerced to **probabilities**; if the loaded teacher emits logits, the script applies a softmax automatically.
-  * KD uses the common $T^2$ scaling to keep gradients balanced across temperatures.
+* **Notes:** Teacher outputs are coerced to probabilities (softmax applied if needed). KD uses the standard \$T^2\$ scaling.
 
 ---
 
 ### Quantization (export path)
 
-* Full-integer **INT8** conversion with a representative dataset (up to 500 samples) and `inference_input_type=int8`, `inference_output_type=int8`.
+* Full-integer **INT8** conversion using a representative dataset (up to 500 samples), with:
+  `inference_input_type = int8`, `inference_output_type = int8`.
 * Outputs:
 
   * `student_kd.keras` — Keras checkpoint
   * `student_int8.tflite` — quantized model
-  * `model_data.cc` — C array (`g_model`, `g_model_len`) for embedded targets (e.g., RIOT OS)
+  * `model_data.cpp` — C array (`g_model`, `g_model_len`) for embedded targets (e.g., RIOT OS)
 
 
