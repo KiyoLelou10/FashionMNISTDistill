@@ -45,7 +45,7 @@ python3 CNNDistillRIOT.py
 ### 2. Distill into a Student
 
 ```bash
-python distill_fmnist_48_manual_v2.py
+python CNNDistillRIOT.py
 ```
 
 Produces:
