@@ -126,7 +126,7 @@ $$
 **Total loss:**
 
 $$
-\mathcal{L}_{\text{student}} = \alpha\,\mathcal{L}_{\text{CE}} + (1-\alpha)\,\mathcal{L}_{\text{KD}}
+\mathcal{L}_{\text{student}} \;=\; \alpha\,\mathcal{L}_{\text{CE}} \;+\; (1-\alpha)\,\mathcal{L}_{\text{KD}}
 \qquad \text{with } \alpha=0.5,\; T=3.0
 $$
 
