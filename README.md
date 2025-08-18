@@ -125,9 +125,7 @@ $$
 
 **Total loss:**
 
-$$
-\mathcal{L}_{\text{student}} \;=\; \alpha\,\mathcal{L}_{\text{CE}} \;+\; (1-\alpha)\,\mathcal{L}_{\text{KD}}
-$$
+$\mathcal{L}_{\text{student}} \;=\; \alpha\,\mathcal{L}_{\text{CE}} \;+\; (1-\alpha)\,\mathcal{L}_{\text{KD}}$
 
 
 * **Optimizer:** Adam (lr = 1e-3)
