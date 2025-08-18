@@ -115,12 +115,12 @@ $$
 **KD term (teacher probs \$\mathbf{p}\_t\$):**
 
 $$
-\mathbf{p}_t^{(T)} = \mathrm{norm}\!\big(\mathbf{p}_t^{\,1/T}\big),\qquad
+\mathbf{p}_t^{(T)} = \mathrm{norm}\big(\mathbf{p}_t^{\,1/T}\big),\qquad
 \mathbf{p}_s^{(T)} = \mathrm{softmax}\!\big(\mathbf{z}_s/T\big)
 $$
 
 $$
-\mathcal{L}_{\text{KD}} = T^2 \cdot \mathrm{KL}\!\left(\mathbf{p}_t^{(T)} \,\middle\|\, \mathbf{p}_s^{(T)}\right)
+\mathcal{L}_{\text{KD}} = T^2 \cdot \mathrm{KL}\left(\mathbf{p}_t^{(T)} \,\middle\|\, \mathbf{p}_s^{(T)}\right)
 $$
 
 **Total loss:**
