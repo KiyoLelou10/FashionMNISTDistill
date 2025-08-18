@@ -39,13 +39,13 @@ There are also **zip files with pictures of people**. Theoretically, you could u
 ### 1. Train the Teacher
 
 ```bash
-python3 CNNDistillRIOT.py
+python3 FashionMnistCNN.py
 ```
 
 ### 2. Distill into a Student
 
 ```bash
-python CNNDistillRIOT.py
+python3 CNNDistillRIOT.py
 ```
 
 Produces:
