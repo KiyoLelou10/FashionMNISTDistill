@@ -59,7 +59,7 @@ Produces:
 If bugs occur during Step 2’s export:
 
 ```bash
-python make_c_array.py --model student_int8.tflite --out model_data.cc
+python3 WeightsForRIOT.py
 ```
 
 ### 4. Deploy in RIOT OS
