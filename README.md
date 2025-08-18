@@ -73,3 +73,76 @@ Copy `model_data.cc` into your RIOT project and link against TensorFlow Lite Mic
 * Teacher: \~89% accuracy on FMNIST (48×48)
 * Student: \~85% accuracy (INT8, distilled)
 * For people-counting, pipeline is theoretically the same, but dataset size may require tweaks.
+
+## 🧮 Loss functions (teacher & student)
+
+### Teacher training (`fashion_mnist_48_cnn_fast_v3_compat.py`)
+
+**Objective:** smoothed cross-entropy on 10-class Fashion-MNIST.
+
+**Loss:** label-smoothed categorical cross-entropy (via one-hot)
+
+$$
+\tilde{\mathbf{y}} = (1-\varepsilon)\,\mathrm{onehot}(y) + \frac{\varepsilon}{K}\,\mathbf{1}
+\qquad \text{with } \varepsilon=0.05,\; K=10
+$$
+
+$$
+\mathcal{L}_{\text{teacher}} = \mathrm{CE}\!\big(\tilde{\mathbf{y}},\, \mathbf{p}_{\theta}\big)
+$$
+
+where \$\mathbf{p}\_{\theta}\$ are the model softmax outputs.
+
+* **In code:** `smooth_sparse_cce(num_classes=10, label_smoothing=0.05)` → `keras.losses.categorical_crossentropy`
+* **Optimizer:** Adam (lr = 1e-3)
+* **Regularization:** L2 (1e-4) on conv/dense kernels
+* **Augmentations:** pad+random crop, light brightness/contrast jitter
+
+---
+
+### Student distillation (`distill_fmnist_48_manual_v2.py`)
+
+**Objective:** combine hard-label CE with a temperature-scaled KD term from the frozen teacher.
+
+**Hard-label term (student logits \$\mathbf{z}\_s\$):**
+
+$$
+\mathcal{L}_{\text{CE}} = \mathrm{CE}_{\text{sparse}}\!\big(y,\, \mathbf{z}_s\big)
+$$
+
+*(implemented with `SparseCategoricalCrossentropy(from_logits=True)`)*
+
+**KD term (teacher probs \$\mathbf{p}\_t\$):**
+
+$$
+\mathbf{p}_t^{(T)} = \mathrm{norm}\!\big(\mathbf{p}_t^{\,1/T}\big),\qquad
+\mathbf{p}_s^{(T)} = \mathrm{softmax}\!\big(\mathbf{z}_s/T\big)
+$$
+
+$$
+\mathcal{L}_{\text{KD}} = T^2 \cdot \mathrm{KL}\!\left(\mathbf{p}_t^{(T)} \,\middle\|\, \mathbf{p}_s^{(T)}\right)
+$$
+
+**Total loss:**
+
+$$
+\mathcal{L}_{\text{student}} = \alpha\,\mathcal{L}_{\text{CE}} + (1-\alpha)\,\mathcal{L}_{\text{KD}}
+\qquad \text{with } \alpha=0.5,\; T=3.0
+$$
+
+* **Optimizer:** Adam (lr = 1e-3)
+* **Notes:** Teacher outputs are coerced to probabilities (softmax applied if needed). KD uses the standard \$T^2\$ scaling.
+
+---
+
+### Quantization (export path)
+
+* Full-integer **INT8** conversion using a representative dataset (up to 500 samples), with `inference_input_type = int8` and `inference_output_type = int8`.
+* Outputs:
+
+  * `student_kd.keras` — Keras checkpoint
+  * `student_int8.tflite` — quantized model
+  * `model_data.cpp` — C array (`g_model`, `g_model_len`) for embedded targets (e.g., RIOT OS)
+
+---
+
