@@ -39,7 +39,7 @@ There are also **zip files with pictures of people**. Theoretically, you could u
 ### 1. Train the Teacher
 
 ```bash
-python fashion_mnist_48_cnn_fast_v3_compat.py
+python3 CNNDistillRIOT.py
 ```
 
 ### 2. Distill into a Student
